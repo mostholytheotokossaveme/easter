@@ -41,52 +41,53 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "include/common.h"
-#include "include/jdn_util.h"
 #include "include/common_calc.h"
-#include "include/ext.h"
+#include "include/PaschalComputus.h"
 
-void paschal_algo_check() {
-    for (int i = 34; i < 5000; i++) {
-	YMD r[5];
-	for (int k = 0; k < 5; k++) {
-	   r[k] = jc_calcs()[k](i);
-	}
-	for (int j = 0; j <= 2; j+=2) {
-	  YMD r0 = r[0], r1 = r[1], r2 = r[2], r3 = r[3];
-          _Bool r0r1 = ymd_equals(r0,r1);
-          _Bool r2r1 = ymd_equals(r2,r1);
-          _Bool r0r2 = ymd_equals(r0,r2);
-          _Bool r3r2 = ymd_equals(r3,r2);
-	  if (r0r1 && r2r1 && r0r2 && r3r2) {
-	  } else {
-	     printf("%d: %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d \r\n", i,
-		r0.year, r0.month, r0.day,
-		r1.year, r1.month, r1.day,
-		r2.year, r2.month, r2.day,
-		r3.year, r3.month, r3.day);
-	  }
-	}
-    }
-}
+static enum _algo_idx _algo_idx(const char*);
 
-int main(int argc, char* argv[]) {
- if (argc > 2) {
-    const int year = (int)atof(argv[1]);
-    const char* algo = argv[2];
-    YMD ymd = jc_calc_any()(year);
-    int wd = -1;
-    printf("%d/%d/%d\t", ymd.day, ymd.month, ymd.year);
-    struct tm tmjc = util_get_tm(ymd);
-    ymd = gc_calc_any()(year);
-    struct tm tmgc = util_get_tm(ymd);
-    printf("%d/%d/%d\r\n", ymd.day, ymd.month, ymd.year);
+static const _calc _jc_get_pascha[5] = {
+   jc_get_pascha_vlevitskim,
+   jc_get_pascha_jo,
+   jc_get_pascha_alebedev,
+   jc_get_pascha_dveri,
+   jc_get_pascha_jo
+ };
 
-    printf("%s [%d]\r\n", asctime(&tmjc), tmjc.tm_yday);
-    printf("%s [%d]\r\n", asctime(&tmgc), tmgc.tm_yday);
-    return 0;
+static enum _algo_idx {
+   vlevitskim, jo, alebedev, dveri, def
+} algoidx;
+
+static enum _algo_idx _algo_idx(const char* algo) {
+ enum _algo_idx idx;
+ if(strcmp(algo, "alebedev") == 0) {
+   idx = alebedev;
+ } else if (strcmp(algo, "vlevitskim") == 0) {
+   idx = vlevitskim;
+ } else if (strcmp(algo, "dveri") == 0) {
+   idx = dveri;
+ } else if (strcmp(algo, "jo") == 0) {
+   idx = jo;
  } else {
-    paschal_algo_check();
+   idx = def;
  }
- return 0;
+ return idx;
 }
+
+_calc jc_calc_any(const char* algo) {
+ _calc r = _jc_get_pascha[_algo_idx(algo)];
+ return r;
+}
+
+_calc const* jc_calcs() {
+ return _jc_get_pascha;
+}
+
+_Bool ymd_equals(const YMD a, const YMD b) {
+  _Bool result =
+	a.year == b.year &&
+	a.month == b.month &&
+	a.day == b.day;
+  return result;
+}
+

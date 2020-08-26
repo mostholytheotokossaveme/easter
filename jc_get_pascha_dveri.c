@@ -36,57 +36,31 @@
 Господи, Иисусе Христе, Сине Божий, помилуй ме грешния.
 Пресвята Владичице, Богородице, спаси нас.
 **/
-#include <stdio.h>
+
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <string.h>
-#include "include/common.h"
-#include "include/jdn_util.h"
-#include "include/common_calc.h"
-#include "include/ext.h"
+#include "include/jc_get_pascha_dveri.h"
 
-void paschal_algo_check() {
-    for (int i = 34; i < 5000; i++) {
-	YMD r[5];
-	for (int k = 0; k < 5; k++) {
-	   r[k] = jc_calcs()[k](i);
+YMD jc_get_pascha_dveri(const YEAR_NUM year) {
+	/** Ref: http://synpress-classic.dveri.bg/pasha/index.htm **/
+	/**
+		Year - номер на годината
+		a = Year mod 19
+		b = Year mod 4
+		c = Year mod 7
+		d = (19 * a + 15) mod 30
+		e = (2 * b + 4 * c + 6 * d + 6) mod 7,
+
+		Ако (d + e) > 10, то Пасхата по стар стил ще бъде (d + e - 9) април, в противен случай - (22 + d + e) март 
+	**/
+	int a = year%19, b = year%4, c=year%7, d=(19*a +15) % 30, e = (2*b + 4*c + 6*d + 6) % 7;
+	YMD r;
+	r.year = year;
+	if (10 <= (d + e)) {
+		r.month = 4;
+		r.day = d+e-9;
+	} else {
+		r.month = 3;
+		r.day = 22+d+e;
 	}
-	for (int j = 0; j <= 2; j+=2) {
-	  YMD r0 = r[0], r1 = r[1], r2 = r[2], r3 = r[3];
-          _Bool r0r1 = ymd_equals(r0,r1);
-          _Bool r2r1 = ymd_equals(r2,r1);
-          _Bool r0r2 = ymd_equals(r0,r2);
-          _Bool r3r2 = ymd_equals(r3,r2);
-	  if (r0r1 && r2r1 && r0r2 && r3r2) {
-	  } else {
-	     printf("%d: %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d \r\n", i,
-		r0.year, r0.month, r0.day,
-		r1.year, r1.month, r1.day,
-		r2.year, r2.month, r2.day,
-		r3.year, r3.month, r3.day);
-	  }
-	}
-    }
-}
-
-int main(int argc, char* argv[]) {
- if (argc > 2) {
-    const int year = (int)atof(argv[1]);
-    const char* algo = argv[2];
-    YMD ymd = jc_calc_any()(year);
-    int wd = -1;
-    printf("%d/%d/%d\t", ymd.day, ymd.month, ymd.year);
-    struct tm tmjc = util_get_tm(ymd);
-    ymd = gc_calc_any()(year);
-    struct tm tmgc = util_get_tm(ymd);
-    printf("%d/%d/%d\r\n", ymd.day, ymd.month, ymd.year);
-
-    printf("%s [%d]\r\n", asctime(&tmjc), tmjc.tm_yday);
-    printf("%s [%d]\r\n", asctime(&tmgc), tmgc.tm_yday);
-    return 0;
- } else {
-    paschal_algo_check();
- }
- return 0;
+	return r;
 }

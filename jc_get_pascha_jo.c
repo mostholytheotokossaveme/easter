@@ -36,57 +36,19 @@
 Господи, Иисусе Христе, Сине Божий, помилуй ме грешния.
 Пресвята Владичице, Богородице, спаси нас.
 **/
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <string.h>
-#include "include/common.h"
-#include "include/jdn_util.h"
-#include "include/common_calc.h"
-#include "include/ext.h"
 
-void paschal_algo_check() {
-    for (int i = 34; i < 5000; i++) {
-	YMD r[5];
-	for (int k = 0; k < 5; k++) {
-	   r[k] = jc_calcs()[k](i);
-	}
-	for (int j = 0; j <= 2; j+=2) {
-	  YMD r0 = r[0], r1 = r[1], r2 = r[2], r3 = r[3];
-          _Bool r0r1 = ymd_equals(r0,r1);
-          _Bool r2r1 = ymd_equals(r2,r1);
-          _Bool r0r2 = ymd_equals(r0,r2);
-          _Bool r3r2 = ymd_equals(r3,r2);
-	  if (r0r1 && r2r1 && r0r2 && r3r2) {
-	  } else {
-	     printf("%d: %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d \r\n", i,
-		r0.year, r0.month, r0.day,
-		r1.year, r1.month, r1.day,
-		r2.year, r2.month, r2.day,
-		r3.year, r3.month, r3.day);
-	  }
-	}
-    }
-}
+#include "include/jc_get_pascha_jo.h"
 
-int main(int argc, char* argv[]) {
- if (argc > 2) {
-    const int year = (int)atof(argv[1]);
-    const char* algo = argv[2];
-    YMD ymd = jc_calc_any()(year);
-    int wd = -1;
-    printf("%d/%d/%d\t", ymd.day, ymd.month, ymd.year);
-    struct tm tmjc = util_get_tm(ymd);
-    ymd = gc_calc_any()(year);
-    struct tm tmgc = util_get_tm(ymd);
-    printf("%d/%d/%d\r\n", ymd.day, ymd.month, ymd.year);
-
-    printf("%s [%d]\r\n", asctime(&tmjc), tmjc.tm_yday);
-    printf("%s [%d]\r\n", asctime(&tmgc), tmgc.tm_yday);
-    return 0;
- } else {
-    paschal_algo_check();
- }
- return 0;
+YMD jc_get_pascha_jo(const YEAR_NUM year) {
+	/** Ref: https://orthodoxwiki.org/Paschalion#The_Orthodox_Proposal_of_1923 **/
+	int
+	G = year%19,
+	I = ((19*G)+15)%30,
+	J = (year+(year/4) + I)%7,
+	L = I - J,
+	em = 3+((L+40)/44),
+	ed = L + 28 - 31 * (em/4),
+	y = year;
+	YMD r = {y,em,ed};
+	return r;
 }
